@@ -16,7 +16,7 @@ DATA_FILE = BASE_DIR / "document.json"
 INDEX_FILE = BASE_DIR / "index.html"
 
 # Change this in production
-DEV_PASSWORD = "Fxaw(*FogM$2vCasFIW812xasf!@ls"
+DEV_PASSWORD = os.getenv("DEV_PASSWORD", "changeme")
 
 # ---------------------------
 # LOAD / INIT DATA
