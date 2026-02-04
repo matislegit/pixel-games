@@ -6,111 +6,69 @@ import uvicorn
 import os
 
 app = FastAPI()
-
-# ---------------------------
-# BASE DIRECTORY
-# ---------------------------
 BASE_DIR = Path(__file__).parent
 
+# -------------------------------
+# Developer password from environment variable
+# -------------------------------
+DEV_PASSWORD = os.getenv("DEV_PASSWORD", "changeme")  # Default fallback
+
 DATA_FILE = BASE_DIR / "document.json"
-INDEX_FILE = BASE_DIR / "index.html"
 
-# Change this in production
-DEV_PASSWORD = os.getenv("DEV_PASSWORD", "changeme")
-
-# ---------------------------
-# LOAD / INIT DATA
-# ---------------------------
+# Load or initialize document
 if DATA_FILE.exists():
-    try:
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except:
-        data = {"content": ""}
+    with open(DATA_FILE, "r", encoding="utf-8") as f:
+        data = json.load(f)
 else:
     data = {"content": ""}
 
 def save_to_file():
     with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f)
 
-# ---------------------------
-# ROUTES
-# ---------------------------
-
+# -------------------------------
+# Routes
+# -------------------------------
 @app.get("/", response_class=HTMLResponse)
 async def home():
-    if INDEX_FILE.exists():
-        return INDEX_FILE.read_text(encoding="utf-8")
-    return "<h1>index.html not found</h1>"
+    return (BASE_DIR / "index.html").read_text(encoding="utf-8")
 
 @app.get("/load")
 async def load_doc():
     return {"content": data["content"]}
 
-# ---------------------------
-# WEBSOCKET HANDLER
-# ---------------------------
-
-clients = set()
+# -------------------------------
+# WebSocket
+# -------------------------------
+clients = []
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    clients.add(websocket)
-
-    # Send current document on connect
-    await websocket.send_json({
-        "content": data["content"]
-    })
-
+    clients.append(websocket)
     try:
+        # Send current document to new client
+        await websocket.send_json({"content": data["content"]})
         while True:
             msg = await websocket.receive_json()
-
             password = msg.get("password", "")
             content = msg.get("content", "")
 
-            # Only dev can update
+            # Only dev can send updates
             if password == DEV_PASSWORD:
-
                 data["content"] = content
                 save_to_file()
-
-                # Broadcast to all clients
-                dead_clients = set()
-
+                # Broadcast updates to all other clients
                 for client in clients:
-                    try:
-                        await client.send_json({
-                            "content": content
-                        })
-                    except:
-                        dead_clients.add(client)
-
-                # Remove disconnected clients
-                for dc in dead_clients:
-                    clients.discard(dc)
+                    if client != websocket:
+                        await client.send_json({"content": content})
 
     except WebSocketDisconnect:
-        clients.discard(websocket)
+        clients.remove(websocket)
 
-    except Exception as e:
-        print("WebSocket error:", e)
-        clients.discard(websocket)
-
-# ---------------------------
-# MAIN
-# ---------------------------
-
+# -------------------------------
+# Run server
+# -------------------------------
 if __name__ == "__main__":
-
-    # Render provides PORT env var
-    port = int(os.environ.get("PORT", 8000))
-
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=port,
-        reload=False
-    )
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
