@@ -5,15 +5,41 @@
 <title>Pixel Games - Value List</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+/* ------------------ BODY + THEME ------------------ */
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
   background: #050508;
   color: #e6d9ff;
-  display: flex;
-  height: 100vh;
   overflow: hidden;
+  height: 100vh;
 }
+
+/* ------------------ DEVICE SELECTION SCREEN ------------------ */
+#deviceSelect {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  gap: 30px;
+}
+.deviceBox {
+  background: #090912;
+  border: 2px solid #7a3cff;
+  border-radius: 12px;
+  padding: 40px 30px;
+  cursor: pointer;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.deviceBox:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px #7a3cff88;
+}
+
+/* ------------------ SIDEBAR ------------------ */
 .sidebar {
   width: 220px;
   background: #090912;
@@ -24,8 +50,12 @@ body {
   box-shadow: 2px 0 20px #7a3cff33;
   transition: transform 0.3s ease;
   z-index: 10;
+  position: fixed;
+  height: 100%;
 }
-.sidebar.collapsed { transform: translateX(-100%); }
+.sidebar.collapsed {
+  transform: translateX(-100%);
+}
 .sidebar button {
   background: none;
   border: none;
@@ -48,6 +78,8 @@ body {
   50% { box-shadow: 0 0 15px #7a3cff66; }
   100% { box-shadow: 0 0 5px #7a3cff33; }
 }
+
+/* ------------------ HAMBURGER ------------------ */
 #hamburger {
   position: fixed;
   top: 10px;
@@ -66,6 +98,8 @@ body {
   transform: scale(1.15);
   box-shadow: 0 0 20px #9b6cffaa;
 }
+
+/* ------------------ MAIN CONTENT ------------------ */
 .main {
   flex: 1;
   display: flex;
@@ -73,12 +107,14 @@ body {
   align-items: center;
   overflow-y: auto;
   padding: 20px;
-  position: relative;
+  margin-left: 220px;
   transition: margin-left 0.3s ease;
 }
-.main.recenter { margin-left: 0; }
+.main.recenter { margin-left: 20px; }
+
+/* ------------------ DEV LOGIN ------------------ */
 #devLogin {
-  position: absolute;
+  position: fixed;
   top: 20px;
   right: 20px;
   background: #9b6cff;
@@ -96,9 +132,11 @@ body {
 #devLogin:hover { transform: scale(1.15); box-shadow: 0 0 35px #9b6cff; }
 @keyframes pulseGlow {
   0% { box-shadow: 0 0 15px #7a3cff66; }
-  50% { box-shadow: 0 0 35px #9b6cffaa; }
+  50% { box-shadow: 0 0 35px #7a3cffaa; }
   100% { box-shadow: 0 0 15px #7a3cff66; }
 }
+
+/* ------------------ DOCUMENT BOX ------------------ */
 #values #publicView {
   width: 90%;
   max-width: 1200px;
@@ -114,6 +152,8 @@ body {
   font-size: 1rem;
   margin: 0 auto;
 }
+
+/* ------------------ SAVE / CANCEL ------------------ */
 #saveBtn, #cancelBtn {
   display: none;
   margin-top: 10px;
@@ -129,18 +169,32 @@ body {
   transition: all 0.2s ease;
 }
 #saveBtn:hover, #cancelBtn:hover { background: #9b6cff; transform: scale(1.05); }
+
+/* ------------------ RESPONSIVE ------------------ */
+@media (max-width: 768px){
+  .main { margin-left: 0; }
+  #devLogin { display: none; }
+  .deviceBox { padding: 30px 20px; font-size: 1rem; }
+}
 </style>
 </head>
 <body>
 
-<button id="hamburger" onclick="toggleSidebar()">☰</button>
+<!-- DEVICE SELECTION MENU -->
+<div id="deviceSelect">
+  <div class="deviceBox" onclick="selectDevice('phone')">Phone</div>
+  <div class="deviceBox" onclick="selectDevice('tablet')">Tablet</div>
+  <div class="deviceBox" onclick="selectDevice('pc')">PC</div>
+</div>
 
+<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
   <button onclick="showTab('home')">Home</button>
   <button onclick="showTab('values')">Values</button>
 </div>
 
-<div class="main" id="mainContent">
+<!-- MAIN CONTENT -->
+<div class="main" id="mainContent" style="display:none;">
   <div id="home" class="tab">
     <h1>Welcome to Pixel Games Official PSX:R Value List</h1>
     <p>This is the Official Value List for Pet Simulator X: Return. To check the values please go to the values tab on the left.</p>
@@ -160,26 +214,47 @@ body {
 <script>
 let ws;
 let originalContent = "";
+let currentDevice = "";
 
+// ------------------ DEVICE SELECTION ------------------
+function selectDevice(device){
+  currentDevice = device;
+  document.getElementById('deviceSelect').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'flex';
+
+  // Hide devLogin on mobile
+  if(device !== 'pc'){
+    document.getElementById('devLogin').style.display = 'none';
+  } else {
+    document.getElementById('devLogin').style.display = 'block';
+  }
+
+  // Adjust main content margin based on device
+  const main = document.getElementById('mainContent');
+  main.classList.add('recenter');
+}
+
+// ------------------ TABS ------------------
 function showTab(tabName){
   document.querySelectorAll('.tab').forEach(t=>t.style.display='none');
   document.getElementById(tabName).style.display='block';
 }
 
+// ------------------ SIDEBAR TOGGLE ------------------
 function toggleSidebar(){
   const sidebar = document.getElementById('sidebar');
   sidebar.classList.toggle('collapsed');
   document.getElementById('mainContent').classList.toggle('recenter');
 }
 
-// WebSocket
+// ------------------ WEBSOCKET ------------------
 function initWebSocket(){
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
   ws = new WebSocket(`${protocol}://${window.location.host}/ws`);
 
-  ws.onopen = () => console.log("WebSocket connected!");
-  ws.onclose = () => console.log("WebSocket closed!");
-  ws.onerror = (e) => console.log("WebSocket error", e);
+  ws.onopen = ()=>console.log("WebSocket connected!");
+  ws.onclose = ()=>console.log("WebSocket closed!");
+  ws.onerror = (e)=>console.log("WebSocket error", e);
 
   ws.onmessage = (event)=>{
     const msg = JSON.parse(event.data);
@@ -192,11 +267,11 @@ function initWebSocket(){
 
 initWebSocket();
 
-// Developer login
+// ------------------ DEV LOGIN ------------------
 function devLogin(){
   const password = prompt("Enter developer password:");
   if(!password) return alert("Developer password required!");
-  if(password !== "") window.devPassword = password;
+  window.devPassword = password;
 
   const publicView = document.getElementById('publicView');
   originalContent = publicView.innerText;
@@ -210,16 +285,13 @@ function devLogin(){
   alert("Developer mode enabled! Only edits with correct password will save.");
 }
 
-// Cancel edit
+// ------------------ CANCEL EDIT ------------------
 function cancelEdit(){
   const publicView = document.getElementById('publicView');
   publicView.innerText = originalContent;
 
   if(ws.readyState === 1){
-    ws.send(JSON.stringify({
-      content: originalContent,
-      password: window.devPassword || ""
-    }));
+    ws.send(JSON.stringify({ content: originalContent, password: window.devPassword || "" }));
   }
 
   publicView.contentEditable = false;
@@ -231,27 +303,20 @@ function cancelEdit(){
   alert("Changes canceled. Developer mode exited.");
 }
 
-// Force save
+// ------------------ FORCE SAVE ------------------
 function forceSave(){
   if(!window.devPassword) return alert("Developer not logged in!");
   if(ws.readyState !== 1) return alert("WebSocket not connected.");
-  ws.send(JSON.stringify({
-    content: document.getElementById('publicView').innerText,
-    password: window.devPassword
-  }));
+  ws.send(JSON.stringify({ content: document.getElementById('publicView').innerText, password: window.devPassword }));
   alert("Document force-saved!");
 }
 
-// Send updates while typing
+// ------------------ TYPING UPDATES ------------------
 document.getElementById('publicView').addEventListener('input', ()=>{
   if(window.devPassword && ws.readyState===1){
-    ws.send(JSON.stringify({
-      content: document.getElementById('publicView').innerText,
-      password: window.devPassword
-    }));
+    ws.send(JSON.stringify({ content: document.getElementById('publicView').innerText, password: window.devPassword }));
   }
 });
 </script>
-
 </body>
 </html>
