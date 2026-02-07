@@ -163,7 +163,7 @@ body {
   line-height: 1.5;
 }
 
-/* Values document area */
+/* Values document */
 #values #publicView {
   width: 100%;
   height: 80vh;
@@ -174,50 +174,12 @@ body {
   overflow-y: auto;
   white-space: pre-wrap;
   font-size: 1rem;
-  transition: all 0.3s ease;
-}
-
-/* Save / Cancel buttons */
-#saveBtn, #cancelBtn {
-  display: none;
-  margin-top: 10px;
-  background: #7a3cff;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 20px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-#saveBtn:hover, #cancelBtn:hover {
-  background: #9b6cff;
-  transform: scale(1.05);
 }
 
 /* ==================================================
-   DEV LOGIN (PC ONLY)
+   DEVICE LAYOUT
 ================================================== */
-#devLogin {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: #9b6cff;
-  color: white;
-  font-weight: bold;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 6px;
-  cursor: pointer;
-  box-shadow: 0 0 20px #7a3cffaa;
-}
 
-body:not(.device-pc) #devLogin {
-  display: none;
-}
-
-/* ==================================================
-   DEVICE-SPECIFIC LAYOUT
-================================================== */
 body.device-phone #values #publicView {
   height: 70vh;
   font-size: 0.95rem;
@@ -235,6 +197,7 @@ body.device-pc #values #publicView {
    MOBILE FIXES
 ================================================== */
 @media (max-width: 768px) {
+
   .sidebar {
     position: fixed;
     z-index: 10;
@@ -246,9 +209,11 @@ body.device-pc #values #publicView {
     width: 100%;
     padding: 10px;
   }
+
 }
 
 @media (max-width: 480px) {
+
   .device-options {
     gap: 15px;
   }
@@ -258,6 +223,11 @@ body.device-pc #values #publicView {
     height: 100px;
     font-size: 18px;
   }
+
+  #deviceOverlay h1 {
+    font-size: 1.2rem;
+  }
+
 }
 
 </style>
@@ -268,6 +238,7 @@ body.device-pc #values #publicView {
 <!-- DEVICE SELECT -->
 <div id="deviceOverlay">
   <h1>Select Your Device</h1>
+
   <div class="device-options">
     <div class="device-box" onclick="selectDevice('phone')">📱 Phone</div>
     <div class="device-box" onclick="selectDevice('tablet')">📱 Tablet</div>
@@ -286,189 +257,142 @@ body.device-pc #values #publicView {
 
   <div id="home" class="tab">
     <h1>Welcome to Pixel Games Official PSX:R Value List</h1>
-    <p>This is the Official Value List for Pet Simulator X: Return. To check the values please go to the values tab on the left.</p>
+
+    <p>
+      This is the Official Value List for Pet Simulator X: Return.
+      To check the values please go to the values tab on the left.
+    </p>
   </div>
 
   <div id="values" class="tab" style="display:none;">
-    <div id="publicView">Loading document...</div>
-    <button id="saveBtn">Save</button>
-    <button id="cancelBtn">Cancel</button>
+
+    <div id="publicView">
+      Loading document...
+    </div>
+
   </div>
 
 </div>
 
-<button id="devLogin">Developer Login</button>
-
 <script>
 
 /* ===============================
-   DEVICE
+   DEVICE SELECTION
 ================================ */
+
 function selectDevice(type){
-  document.body.className = `device-${type}`;
+
+  document.body.classList.remove(
+    "device-phone",
+    "device-tablet",
+    "device-pc"
+  );
+
+  document.body.classList.add(`device-${type}`);
+
   document.getElementById("deviceOverlay").style.display = "none";
+
   localStorage.setItem("deviceType", type);
 }
 
-const saved = localStorage.getItem("deviceType");
-if(saved) selectDevice(saved);
+const savedDevice = localStorage.getItem("deviceType");
+
+if(savedDevice){
+  selectDevice(savedDevice);
+}
 
 
 /* ===============================
-   SIDEBAR
+   TABS + SIDEBAR
 ================================ */
+
 function showTab(tab){
-  document.querySelectorAll('.tab').forEach(t=>t.style.display='none');
+
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.style.display='none';
+  });
+
   document.getElementById(tab).style.display='block';
 }
 
 function toggleSidebar(){
-  document.getElementById('sidebar').classList.toggle('collapsed');
-  recalcMain();
+
+  const sidebar = document.getElementById('sidebar');
+
+  sidebar.classList.toggle('collapsed');
+
+  recalcMainWidth();
 }
 
-function recalcMain(){
-  const sb = document.getElementById('sidebar');
+function recalcMainWidth(){
+
+  const sidebar = document.getElementById('sidebar');
   const main = document.querySelector('.main');
 
   if(window.innerWidth <= 768){
-    main.style.marginLeft = "0px";
+
+    main.style.marginLeft = '0px';
+
   } else {
-    main.style.marginLeft = sb.classList.contains('collapsed')
-      ? "0px"
-      : (sb.offsetWidth + 15) + "px";
+
+    const sidebarWidth =
+      sidebar.classList.contains('collapsed')
+      ? 0
+      : sidebar.offsetWidth + 15;
+
+    main.style.marginLeft = sidebarWidth + 'px';
   }
 }
 
-window.addEventListener('resize', recalcMain);
-recalcMain();
-
-
-/* ===============================
-   LOAD DOCUMENT
-================================ */
-async function loadDoc(){
-  try{
-    const res = await fetch("/load");
-    const data = await res.json();
-    document.getElementById("publicView").innerText = data.content || "";
-  }catch{
-    console.log("Load failed");
-  }
-}
-
-loadDoc();
+window.addEventListener('resize', recalcMainWidth);
+recalcMainWidth();
 
 
 /* ===============================
    WEBSOCKET
 ================================ */
+
 let ws;
 
-function initWS(){
-  const proto = location.protocol==="https:"?"wss":"ws";
-  ws = new WebSocket(`${proto}://${location.host}/ws`);
+function initWebSocket(){
 
-  ws.onmessage = e=>{
-    const msg = JSON.parse(e.data);
-    document.getElementById("publicView").innerText = msg.content;
+  const protocol =
+    window.location.protocol === "https:"
+    ? "wss"
+    : "ws";
+
+  ws = new WebSocket(
+    `${protocol}://${window.location.host}/ws`
+  );
+
+  ws.onopen = ()=>{
+    console.log("WebSocket connected");
   };
 
-  ws.onclose = ()=>setTimeout(initWS,2000);
-}
+  ws.onclose = ()=>{
+    console.log("WebSocket closed");
+  };
 
-initWS();
+  ws.onerror = (e)=>{
+    console.log("WebSocket error", e);
+  };
 
+  ws.onmessage = (event)=>{
 
-/* ===============================
-   DEV LOGIN
-================================ */
-let devPassword = "";
-let original = "";
+    const msg = JSON.parse(event.data);
 
-async function devLogin(){
+    const view = document.getElementById('publicView');
 
-  if(!document.body.classList.contains("device-pc")){
-    alert("PC only feature");
-    return;
-  }
+    if(view.innerText !== msg.content){
 
-  const pass = prompt("Developer password:");
-  if(!pass) return;
-
-  try{
-    const res = await fetch("/auth",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({password:pass})
-    });
-
-    const data = await res.json();
-
-    if(!data.ok){
-      alert("Wrong password");
-      return;
+      view.innerText = msg.content;
     }
-
-    devPassword = pass;
-
-    const pv = document.getElementById("publicView");
-    original = pv.innerText;
-    pv.contentEditable = true;
-    pv.focus();
-
-    saveBtn.style.display="inline-block";
-    cancelBtn.style.display="inline-block";
-
-    alert("Developer mode enabled");
-
-  }catch{
-    alert("Auth server error");
-  }
+  };
 }
 
-devLoginBtn = document.getElementById("devLogin");
-devLoginBtn.onclick = devLogin;
-
-
-/* ===============================
-   SAVE / CANCEL
-================================ */
-const saveBtn = document.getElementById("saveBtn");
-const cancelBtn = document.getElementById("cancelBtn");
-const pv = document.getElementById("publicView");
-
-pv.addEventListener("input",()=>{
-  if(devPassword && ws.readyState===1){
-    ws.send(JSON.stringify({
-      content: pv.innerText,
-      password: devPassword
-    }));
-  }
-});
-
-saveBtn.onclick = ()=>{
-  if(!devPassword) return;
-
-  ws.send(JSON.stringify({
-    content: pv.innerText,
-    password: devPassword
-  }));
-
-  alert("Saved");
-};
-
-cancelBtn.onclick = ()=>{
-  pv.innerText = original;
-  pv.contentEditable = false;
-  devPassword = "";
-
-  saveBtn.style.display="none";
-  cancelBtn.style.display="none";
-
-  alert("Canceled");
-};
+initWebSocket();
 
 </script>
+
 </body>
 </html>
