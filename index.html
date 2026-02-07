@@ -2,321 +2,467 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pixel Games - Value List</title>
+<title>Pixel Games Value List</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-/* ------------------ BODY + THEME ------------------ */
-body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
-  background: #050508;
-  color: #e6d9ff;
-  overflow: hidden;
-  height: 100vh;
+
+/* -------------------- */
+/* RESET */
+/* -------------------- */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: Arial, sans-serif;
 }
 
-/* ------------------ DEVICE SELECTION SCREEN ------------------ */
-#deviceSelect {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  gap: 30px;
-}
-.deviceBox {
-  background: #090912;
-  border: 2px solid #7a3cff;
-  border-radius: 12px;
-  padding: 40px 30px;
-  cursor: pointer;
-  text-align: center;
-  font-weight: bold;
-  font-size: 1.2rem;
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-.deviceBox:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 20px #7a3cff88;
+body{
+    background:#0b0c12;
+    color:white;
+    overflow-x:hidden;
 }
 
-/* ------------------ SIDEBAR ------------------ */
-.sidebar {
-  width: 220px;
-  background: #090912;
-  display: flex;
-  flex-direction: column;
-  padding-top: 60px;
-  padding-left: 15px;
-  box-shadow: 2px 0 20px #7a3cff33;
-  transition: transform 0.3s ease;
-  z-index: 10;
-  position: fixed;
-  height: 100%;
-}
-.sidebar.collapsed {
-  transform: translateX(-100%);
-}
-.sidebar button {
-  background: none;
-  border: none;
-  color: #e6d9ff;
-  font-size: 18px;
-  padding: 12px 20px;
-  text-align: left;
-  cursor: pointer;
-  margin-bottom: 10px;
-  transition: all 0.3s ease;
-  animation: sidebarPulse 3s infinite;
-}
-.sidebar button:hover {
-  background: #1b0a32;
-  transform: scale(1.05);
-  box-shadow: 0 0 15px #7a3cff66;
-}
-@keyframes sidebarPulse {
-  0% { box-shadow: 0 0 5px #7a3cff33; }
-  50% { box-shadow: 0 0 15px #7a3cff66; }
-  100% { box-shadow: 0 0 5px #7a3cff33; }
+/* -------------------- */
+/* DEVICE SELECT */
+/* -------------------- */
+#deviceSelect{
+    position:fixed;
+    inset:0;
+    background:#08080f;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
 }
 
-/* ------------------ HAMBURGER ------------------ */
-#hamburger {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  background: #9b6cff;
-  color: white;
-  font-weight: bold;
-  border: none;
-  padding: 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  z-index: 100;
-  transition: all 0.3s ease;
-}
-#hamburger:hover {
-  transform: scale(1.15);
-  box-shadow: 0 0 20px #9b6cffaa;
+#deviceSelect h1{
+    margin-bottom:30px;
 }
 
-/* ------------------ MAIN CONTENT ------------------ */
-.main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow-y: auto;
-  padding: 20px;
-  margin-left: 220px;
-  transition: margin-left 0.3s ease;
-}
-.main.recenter { margin-left: 20px; }
-
-/* ------------------ DEV LOGIN ------------------ */
-#devLogin {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: #9b6cff;
-  color: white;
-  font-weight: bold;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 6px;
-  cursor: pointer;
-  box-shadow: 0 0 20px #7a3cffaa;
-  transition: all 0.3s ease;
-  animation: pulseGlow 2s infinite;
-  z-index: 50;
-}
-#devLogin:hover { transform: scale(1.15); box-shadow: 0 0 35px #9b6cff; }
-@keyframes pulseGlow {
-  0% { box-shadow: 0 0 15px #7a3cff66; }
-  50% { box-shadow: 0 0 35px #7a3cffaa; }
-  100% { box-shadow: 0 0 15px #7a3cff66; }
+.device-buttons{
+    display:flex;
+    gap:25px;
+    flex-wrap:wrap;
 }
 
-/* ------------------ DOCUMENT BOX ------------------ */
-#values #publicView {
-  width: 90%;
-  max-width: 1200px;
-  min-width: 300px;
-  height: 80vh;
-  background: #0b0b16;
-  border: 1px solid #7a3cff;
-  border-radius: 8px;
-  padding: 16px;
-  color: #f1eaff;
-  overflow: auto;
-  white-space: pre-wrap;
-  font-size: 1rem;
-  margin: 0 auto;
+.device-btn{
+    background:#6a00ff;
+    padding:25px 35px;
+    border-radius:16px;
+    cursor:pointer;
+    font-size:22px;
+    min-width:160px;
+    text-align:center;
+    transition:0.2s;
 }
 
-/* ------------------ SAVE / CANCEL ------------------ */
-#saveBtn, #cancelBtn {
-  display: none;
-  margin-top: 10px;
-  margin-right: 10px;
-  background: #7a3cff;
-  color: black;
-  font-weight: bold;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 20px;
-  cursor: pointer;
-  box-shadow: 0 0 15px #7a3cffaa;
-  transition: all 0.2s ease;
+.device-btn:hover{
+    transform:scale(1.08);
+    box-shadow:0 0 15px #8c6bff;
 }
-#saveBtn:hover, #cancelBtn:hover { background: #9b6cff; transform: scale(1.05); }
 
-/* ------------------ RESPONSIVE ------------------ */
-@media (max-width: 768px){
-  .main { margin-left: 0; }
-  #devLogin { display: none; }
-  .deviceBox { padding: 30px 20px; font-size: 1rem; }
+/* -------------------- */
+/* MAIN LAYOUT */
+/* -------------------- */
+#app{
+    display:flex;
+    min-height:100vh;
 }
+
+/* -------------------- */
+/* SIDEBAR */
+/* -------------------- */
+#sidebar{
+    width:260px;
+    background:#0f111a;
+    padding:20px;
+    transition:0.3s;
+}
+
+#sidebar.closed{
+    width:0;
+    padding:0;
+    overflow:hidden;
+}
+
+#sidebar h2{
+    margin-bottom:20px;
+}
+
+.sidebar-btn{
+    display:block;
+    background:#6a00ff;
+    color:white;
+    padding:12px;
+    border-radius:10px;
+    margin-bottom:12px;
+    cursor:pointer;
+    text-align:center;
+    transition:0.2s;
+}
+
+.sidebar-btn:hover{
+    background:#8445ff;
+}
+
+/* -------------------- */
+/* CONTENT */
+/* -------------------- */
+#content{
+    flex:1;
+    padding:20px;
+    transition:0.3s;
+    max-width:100%;
+}
+
+.centered{
+    max-width:900px;
+    margin:auto;
+}
+
+/* -------------------- */
+/* TOP BAR */
+/* -------------------- */
+#topbar{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    margin-bottom:15px;
+}
+
+#burger{
+    font-size:26px;
+    cursor:pointer;
+    display:none;
+}
+
+/* -------------------- */
+/* DOCUMENT */
+/* -------------------- */
+#docBox{
+    background:#11131d;
+    padding:20px;
+    border-radius:15px;
+    min-height:400px;
+    white-space:pre-wrap;
+    line-height:1.5;
+}
+
+/* -------------------- */
+/* EDIT MODE */
+/* -------------------- */
+#editor{
+    width:100%;
+    min-height:400px;
+    background:#0e1018;
+    color:white;
+    border:none;
+    padding:15px;
+    border-radius:15px;
+    resize:none;
+    display:none;
+}
+
+/* -------------------- */
+/* DEV PANEL */
+/* -------------------- */
+#devPanel{
+    display:none;
+    margin-top:15px;
+}
+
+.dev-btn{
+    background:#ff0055;
+    padding:10px 18px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    margin-right:8px;
+}
+
+/* -------------------- */
+/* MOBILE */
+/* -------------------- */
+.mobile #sidebar{
+    position:fixed;
+    height:100%;
+    z-index:2000;
+}
+
+.mobile #burger{
+    display:block;
+}
+
+.mobile #content{
+    padding:15px;
+}
+
+/* -------------------- */
+/* TABLET */
+/* -------------------- */
+.tablet #content{
+    max-width:800px;
+    margin:auto;
+}
+
 </style>
 </head>
+
 <body>
 
-<!-- DEVICE SELECTION MENU -->
+<!-- DEVICE MENU -->
 <div id="deviceSelect">
-  <div class="deviceBox" onclick="selectDevice('phone')">Phone</div>
-  <div class="deviceBox" onclick="selectDevice('tablet')">Tablet</div>
-  <div class="deviceBox" onclick="selectDevice('pc')">PC</div>
+    <h1>Select Your Device</h1>
+    <div class="device-buttons">
+        <div class="device-btn" onclick="setDevice('phone')">📱 Phone</div>
+        <div class="device-btn" onclick="setDevice('tablet')">📟 Tablet</div>
+        <div class="device-btn" onclick="setDevice('pc')">🖥️ PC</div>
+    </div>
 </div>
+
+
+<!-- APP -->
+<div id="app">
 
 <!-- SIDEBAR -->
-<div class="sidebar" id="sidebar">
-  <button onclick="showTab('home')">Home</button>
-  <button onclick="showTab('values')">Values</button>
+<div id="sidebar">
+
+    <h2>Menu</h2>
+
+    <div class="sidebar-btn" onclick="showHome()">🏠 Home</div>
+    <div class="sidebar-btn" onclick="showValues()">💎 Values</div>
+    <div class="sidebar-btn" id="devBtn" onclick="devLogin()">🔒 Developer Login</div>
+
 </div>
 
-<!-- MAIN CONTENT -->
-<div class="main" id="mainContent" style="display:none;">
-  <div id="home" class="tab">
-    <h1>Welcome to Pixel Games Official PSX:R Value List</h1>
-    <p>This is the Official Value List for Pet Simulator X: Return. To check the values please go to the values tab on the left.</p>
-  </div>
 
-  <div id="values" class="tab" style="display:none;">
-    <div id="publicView" contenteditable="false">Loading document...</div>
-    <div style="margin-top:5px;">
-      <button id="saveBtn" onclick="forceSave()">Save</button>
-      <button id="cancelBtn" onclick="cancelEdit()">Cancel</button>
+<!-- CONTENT -->
+<div id="content">
+
+    <div id="topbar">
+        <div id="burger" onclick="toggleSidebar()">☰</div>
+        <h2 id="pageTitle">Home</h2>
     </div>
-  </div>
+
+    <!-- HOME -->
+    <div id="homeView" class="centered">
+
+        <h1>💎 Pixel Games Value List</h1>
+        <p style="margin-top:15px;">
+            This is the official value list for PSX:R.
+        </p>
+
+    </div>
+
+
+    <!-- VALUES -->
+    <div id="valuesView" style="display:none" class="centered">
+
+        <div id="docBox">Loading document...</div>
+
+        <textarea id="editor"></textarea>
+
+        <div id="devPanel">
+
+            <button class="dev-btn" onclick="saveDoc()">💾 Force Save</button>
+            <button class="dev-btn" onclick="cancelEdit()">❌ Cancel</button>
+
+        </div>
+
+    </div>
+
+</div>
 </div>
 
-<button id="devLogin" onclick="devLogin()">Developer Login</button>
 
 <script>
-let ws;
-let originalContent = "";
-let currentDevice = "";
 
-// ------------------ DEVICE SELECTION ------------------
-function selectDevice(device){
-  currentDevice = device;
-  document.getElementById('deviceSelect').style.display = 'none';
-  document.getElementById('mainContent').style.display = 'flex';
+/* -------------------- */
+/* GLOBAL */
+/* -------------------- */
 
-  // Hide devLogin on mobile
-  if(device !== 'pc'){
-    document.getElementById('devLogin').style.display = 'none';
-  } else {
-    document.getElementById('devLogin').style.display = 'block';
-  }
+let device="pc";
+let ws=null;
+let editing=false;
+let devMode=false;
+let lastContent="";
 
-  // Adjust main content margin based on device
-  const main = document.getElementById('mainContent');
-  main.classList.add('recenter');
-}
+/* -------------------- */
+/* DEVICE */
+/* -------------------- */
 
-// ------------------ TABS ------------------
-function showTab(tabName){
-  document.querySelectorAll('.tab').forEach(t=>t.style.display='none');
-  document.getElementById(tabName).style.display='block';
-}
+function setDevice(type){
 
-// ------------------ SIDEBAR TOGGLE ------------------
-function toggleSidebar(){
-  const sidebar = document.getElementById('sidebar');
-  sidebar.classList.toggle('collapsed');
-  document.getElementById('mainContent').classList.toggle('recenter');
-}
+    device=type;
 
-// ------------------ WEBSOCKET ------------------
-function initWebSocket(){
-  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-  ws = new WebSocket(`${protocol}://${window.location.host}/ws`);
+    document.body.classList.remove("mobile","tablet","pc");
+    document.body.classList.add(type);
 
-  ws.onopen = ()=>console.log("WebSocket connected!");
-  ws.onclose = ()=>console.log("WebSocket closed!");
-  ws.onerror = (e)=>console.log("WebSocket error", e);
+    document.getElementById("deviceSelect").style.display="none";
 
-  ws.onmessage = (event)=>{
-    const msg = JSON.parse(event.data);
-    const publicView = document.getElementById('publicView');
-    if(publicView.innerText !== msg.content){
-      publicView.innerText = msg.content;
+    if(type!=="pc"){
+        document.getElementById("devBtn").style.display="none";
     }
-  }
+
+    recenter();
+
 }
 
-initWebSocket();
+/* -------------------- */
+/* SIDEBAR */
+/* -------------------- */
 
-// ------------------ DEV LOGIN ------------------
+function toggleSidebar(){
+
+    let sb=document.getElementById("sidebar");
+    sb.classList.toggle("closed");
+
+    setTimeout(recenter,300);
+
+}
+
+function recenter(){
+
+    let c=document.getElementById("content");
+
+    if(device==="pc"){
+        c.classList.add("centered");
+    }else{
+        c.classList.remove("centered");
+    }
+
+}
+
+/* -------------------- */
+/* NAV */
+/* -------------------- */
+
+function showHome(){
+
+    document.getElementById("homeView").style.display="block";
+    document.getElementById("valuesView").style.display="none";
+
+    document.getElementById("pageTitle").innerText="Home";
+
+}
+
+function showValues(){
+
+    document.getElementById("homeView").style.display="none";
+    document.getElementById("valuesView").style.display="block";
+
+    document.getElementById("pageTitle").innerText="Values";
+
+}
+
+/* -------------------- */
+/* DEV LOGIN */
+/* -------------------- */
+
 function devLogin(){
-  const password = prompt("Enter developer password:");
-  if(!password) return alert("Developer password required!");
-  window.devPassword = password;
 
-  const publicView = document.getElementById('publicView');
-  originalContent = publicView.innerText;
+    let pass=prompt("Developer Password:");
 
-  publicView.contentEditable = true;
-  publicView.focus();
+    if(!pass) return;
 
-  document.getElementById('saveBtn').style.display = 'inline-block';
-  document.getElementById('cancelBtn').style.display = 'inline-block';
+    ws.send(JSON.stringify({
+        password:pass,
+        test:true
+    }));
 
-  alert("Developer mode enabled! Only edits with correct password will save.");
 }
 
-// ------------------ CANCEL EDIT ------------------
+/* -------------------- */
+/* DOC CONTROL */
+/* -------------------- */
+
+function enableEdit(){
+
+    editing=true;
+    devMode=true;
+
+    document.getElementById("editor").style.display="block";
+    document.getElementById("docBox").style.display="none";
+    document.getElementById("devPanel").style.display="block";
+
+    document.getElementById("editor").value=lastContent;
+
+}
+
+function saveDoc(){
+
+    let content=document.getElementById("editor").value;
+
+    ws.send(JSON.stringify({
+        password:window.devPassword,
+        content:content
+    }));
+
+    editing=false;
+
+}
+
 function cancelEdit(){
-  const publicView = document.getElementById('publicView');
-  publicView.innerText = originalContent;
 
-  if(ws.readyState === 1){
-    ws.send(JSON.stringify({ content: originalContent, password: window.devPassword || "" }));
-  }
+    editing=false;
 
-  publicView.contentEditable = false;
-  window.devPassword = null;
+    document.getElementById("editor").style.display="none";
+    document.getElementById("docBox").style.display="block";
+    document.getElementById("devPanel").style.display="none";
 
-  document.getElementById('saveBtn').style.display = 'none';
-  document.getElementById('cancelBtn').style.display = 'none';
-
-  alert("Changes canceled. Developer mode exited.");
 }
 
-// ------------------ FORCE SAVE ------------------
-function forceSave(){
-  if(!window.devPassword) return alert("Developer not logged in!");
-  if(ws.readyState !== 1) return alert("WebSocket not connected.");
-  ws.send(JSON.stringify({ content: document.getElementById('publicView').innerText, password: window.devPassword }));
-  alert("Document force-saved!");
+/* -------------------- */
+/* WEBSOCKET */
+/* -------------------- */
+
+function connect(){
+
+    ws=new WebSocket(
+        (location.protocol==="https:"?"wss://":"ws://")
+        +location.host+"/ws"
+    );
+
+    ws.onmessage=e=>{
+
+        let data=JSON.parse(e.data);
+
+        if(data.auth==="ok"){
+            window.devPassword=data.password;
+            enableEdit();
+            return;
+        }
+
+        if(data.content!==undefined){
+
+            lastContent=data.content;
+
+            if(!editing){
+                document.getElementById("docBox").innerText=data.content;
+            }
+
+        }
+
+    };
+
 }
 
-// ------------------ TYPING UPDATES ------------------
-document.getElementById('publicView').addEventListener('input', ()=>{
-  if(window.devPassword && ws.readyState===1){
-    ws.send(JSON.stringify({ content: document.getElementById('publicView').innerText, password: window.devPassword }));
-  }
+connect();
+
+/* -------------------- */
+/* LOAD DOC */
+/* -------------------- */
+
+fetch("/load")
+.then(r=>r.json())
+.then(d=>{
+    lastContent=d.content;
+    document.getElementById("docBox").innerText=d.content;
 });
+
 </script>
+
 </body>
 </html>
