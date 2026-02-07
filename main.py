@@ -1,37 +1,21 @@
-import os
-import json
-from pathlib import Path
-
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Body
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
-
+from pathlib import Path
+import json
+import os
 import uvicorn
-
-
-# -------------------------------
-# APP SETUP
-# -------------------------------
 
 app = FastAPI()
 BASE_DIR = Path(__file__).parent
 
+# -------------------------------
+# Environment-based dev password
+# -------------------------------
+DEV_PASSWORD = os.getenv("DEV_PASSWORD", "")  # Set this in Render env
 
 # -------------------------------
-# SECURITY
+# Document storage
 # -------------------------------
-
-# Set this in Render dashboard
-DEV_PASSWORD = os.getenv("DEV_PASSWORD", "changeme123")
-
-if DEV_PASSWORD == "changeme123":
-    print("⚠️ WARNING: DEV_PASSWORD not set in environment!")
-
-
-# -------------------------------
-# DATA STORAGE
-# -------------------------------
-
 DATA_FILE = BASE_DIR / "document.json"
 
 if DATA_FILE.exists():
@@ -40,116 +24,62 @@ if DATA_FILE.exists():
 else:
     data = {"content": ""}
 
-
-def save_file():
+def save_to_file():
     with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
+        json.dump(data, f)
 
 # -------------------------------
-# HTTP ROUTES
+# Routes
 # -------------------------------
-
 @app.get("/", response_class=HTMLResponse)
 async def home():
     return (BASE_DIR / "index.html").read_text(encoding="utf-8")
 
-
 @app.get("/load")
-async def load():
+async def load_doc():
     return {"content": data["content"]}
 
+# -------------------------------
+# Developer auth endpoint
+# -------------------------------
+@app.post("/auth")
+async def auth(data: dict = Body(...)):
+    password = data.get("password", "")
+    if not DEV_PASSWORD:
+        return {"ok": False, "error": "No server password set"}
+    if password == DEV_PASSWORD:
+        return {"ok": True}
+    return {"ok": False}
 
 # -------------------------------
-# WEBSOCKET
+# WebSocket setup
 # -------------------------------
-
 clients = []
 
-
 @app.websocket("/ws")
-async def websocket_endpoint(ws: WebSocket):
-
-    await ws.accept()
-    clients.append(ws)
-
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    clients.append(websocket)
     try:
-        # Send document on connect
-        await ws.send_json({
-            "content": data["content"]
-        })
-
+        # Send current document to new client
+        await websocket.send_json({"content": data["content"]})
         while True:
-
-            msg = await ws.receive_json()
-
+            msg = await websocket.receive_json()
             password = msg.get("password", "")
-            content = msg.get("content")
-            test = msg.get("test", False)
-
-            # -------- AUTH CHECK --------
-
-            if test:
-
-                if password == DEV_PASSWORD:
-
-                    await ws.send_json({
-                        "auth": "ok",
-                        "password": password
-                    })
-
-                else:
-
-                    await ws.send_json({
-                        "auth": "fail"
-                    })
-
-                continue
-
-
-            # -------- SAVE CHECK --------
-
-            if password != DEV_PASSWORD:
-                continue
-
-
-            if content is None:
-                continue
-
-
-            # Save
-            data["content"] = content
-            save_file()
-
-
-            # Broadcast
-            for client in clients:
-
-                try:
-                    await client.send_json({
-                        "content": content
-                    })
-
-                except:
-                    pass
-
-
+            content = msg.get("content", "")
+            # Only dev can send updates
+            if password == DEV_PASSWORD:
+                data["content"] = content
+                save_to_file()
+                # Broadcast updates to all other clients
+                for client in clients:
+                    if client != websocket:
+                        await client.send_json({"content": content})
     except WebSocketDisconnect:
-
-        if ws in clients:
-            clients.remove(ws)
-
+        clients.remove(websocket)
 
 # -------------------------------
-# RUN
+# Run server (for local dev)
 # -------------------------------
-
 if __name__ == "__main__":
-
-    port = int(os.getenv("PORT", 8000))
-
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=port
-    )
+    uvicorn.run(app, host="0.0.0.0", port=8000)
